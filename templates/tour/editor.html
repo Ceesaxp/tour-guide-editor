@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tour Editor</title>
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <script src="https://unpkg.com/yaml"></script>
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
+    <style>
+        .validation-error { color: red; }
+        .validation-success { color: green; }
+        #yaml-preview { background: #f5f5f5; padding: 1em; }
+    </style>
+</head>
+<body>
+    <div id="editor">
+        <h1>Tour Editor</h1>
+
+        <!-- Node Editor Form -->
+        <form hx-post="/tour/validate-node"
+              hx-trigger="change delay:500ms"
+              hx-target="#validation-message">
+            <div>
+                <label for="node-id">Node ID:</label>
+                <input type="number" id="node-id" name="id" required>
+            </div>
+
+            <div>
+                <label for="short-desc">Short Description:</label>
+                <input type="text" id="short-desc" name="short_description" required>
+            </div>
+
+            <div>
+                <label for="narrative">Narrative:</label>
+                <textarea id="narrative" name="narrative" required></textarea>
+            </div>
+
+            <!-- Location -->
+            <div>
+                <label for="lat">Latitude:</label>
+                <input type="number" id="lat" name="location.lat" step="0.0001" required>
+
+                <label for="lon">Longitude:</label>
+                <input type="number" id="lon" name="location.lon" step="0.0001" required>
+            </div>
+
+            <div id="validation-message"></div>
+        </form>
+
+        <!-- YAML Preview -->
+        <div>
+            <h2>YAML Preview</h2>
+            <pre><code id="yaml-preview" class="language-yaml"></code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Update YAML preview
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            const form = evt.detail.elt.closest('form');
+            if (!form) return;
+
+            const formData = new FormData(form);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                if (key.includes('.')) {
+                    const [parent, child] = key.split('.');
+                    if (!data[parent]) data[parent] = {};
+                    data[parent][child] = value;
+                } else {
+                    data[key] = value;
+                }
+            }
+
+            const yamlStr = jsyaml.dump(data);
+            const preview = document.getElementById('yaml-preview');
+            preview.textContent = yamlStr;
+            Prism.highlightElement(preview);
+        });
+
+        // Handle validation messages
+        htmx.on('htmx:afterRequest', function(evt) {
+            if (evt.detail.successful) {
+                document.getElementById('validation-message').innerHTML =
+                    '<div class="validation-success">Valid!</div>';
+            }
+        });
+    </script>
+</body>
+</html>

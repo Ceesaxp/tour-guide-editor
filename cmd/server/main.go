@@ -7,9 +7,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/yourusername/tour-editor/internal/config"
-	"github.com/yourusername/tour-editor/internal/handlers"
-	"github.com/yourusername/tour-editor/internal/middleware"
+	"github.com/ceesaxp/tour-guide-editor/internal/config"
+	"github.com/ceesaxp/tour-guide-editor/internal/handlers"
+	"github.com/ceesaxp/tour-guide-editor/internal/middleware"
 )
 
 func main() {

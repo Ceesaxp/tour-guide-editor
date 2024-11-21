@@ -1,9 +1,13 @@
-tour-editor/
+## Project tree
+
+tour-guide-editor/
 ├── cmd/
 │   └── server/
 │       └── main.go
 ├── internal/
+│   ├── config/
 │   ├── handlers/
+│   ├── middleware/
 │   ├── models/
 │   ├── services/
 │   └── validators/

@@ -24,8 +24,8 @@ type loginResponse struct {
 }
 
 func NewAuthHandler(cfg struct {
-	SecretKey string
-	TokenTTL  int
+	SecretKey string `yaml:"secret_key"` // TODO: probably need to reference the actual config struct?
+	TokenTTL  int    `yaml:"token_ttl"`
 }) *AuthHandler {
 	return &AuthHandler{
 		secretKey: cfg.SecretKey,
