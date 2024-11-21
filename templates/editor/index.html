@@ -1,0 +1,80 @@
+{{define "content"}}
+<div class="editor-container">
+    <div class="sidebar">
+        <div class="tour-metadata">
+            <h2>Tour Details</h2>
+            <form hx-post="/tour/metadata"
+                  hx-trigger="change delay:500ms"
+                  hx-target="#toast">
+                <div class="form-group">
+                    <label for="tour-id">Tour ID</label>
+                    <input type="text" id="tour-id" name="id"
+                           value="{{.Tour.ID}}" required>
+                </div>
+                <div class="form-group">
+                    <label for="tour-name">Name</label>
+                    <input type="text" id="tour-name" name="name"
+                           value="{{.Tour.Name}}" required>
+                </div>
+                <div class="form-group">
+                    <label for="tour-description">Description</label>
+                    <textarea id="tour-description" name="description"
+                            required>{{.Tour.Description}}</textarea>
+                </div>
+                <div class="form-group date-range">
+                    <div>
+                        <label for="start-date">Start Date</label>
+                        <input type="date" id="start-date" name="start_date"
+                               value="{{.Tour.StartDate}}" required>
+                    </div>
+                    <div>
+                        <label for="end-date">End Date</label>
+                        <input type="date" id="end-date" name="end_date"
+                               value="{{.Tour.EndDate}}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="tour-price">Price (cents)</label>
+                    <input type="number" id="tour-price" name="price"
+                           value="{{.Tour.Price}}" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="hero-image">Hero Image</label>
+                    <input type="url" id="hero-image" name="hero_image"
+                           value="{{.Tour.HeroImage}}" required
+                           hx-post="/media/validate-url"
+                           hx-trigger="change"
+                           hx-target="#hero-image-preview">
+                    <div id="hero-image-preview" class="image-preview"></div>
+                </div>
+            </form>
+        </div>
+
+        <div class="nodes-list">
+            <h2>Nodes</h2>
+            <button hx-get="/nodes/new"
+                    hx-target="#node-editor"
+                    class="btn">Add Node</button>
+            <ul id="nodes-list"
+                hx-get="/nodes"
+                hx-trigger="nodeListChanged from:body">
+                {{range .Tour.Nodes}}
+                <li hx-get="/nodes/{{.ID}}/edit"
+                    hx-target="#node-editor"
+                    class="node-item">
+                    {{.ShortDesc}}
+                </li>
+                {{end}}
+            </ul>
+        </div>
+    </div>
+
+    <div id="node-editor" class="main-editor">
+        <!-- Node editor will be loaded here -->
+    </div>
+
+    <div id="yaml-preview" class="yaml-preview">
+        <!-- YAML preview will be loaded here -->
+    </div>
+</div>
+{{end}}

@@ -1,0 +1,79 @@
+{{define "condition-editor"}}
+<div class="condition-editor">
+    <div class="form-group">
+        <label for="condition-type">Type</label>
+        <select name="type"
+                hx-get="/condition/type-fields"
+                hx-target="next div"
+                required>
+            <option value="quiz" {{if eq .Type "quiz"}}selected{{end}}>Quiz</option>
+            <option value="q&a" {{if eq .Type "q&a"}}selected{{end}}>Q&A</option>
+            <option value="puzzle" {{if eq .Type "puzzle"}}selected{{end}}>Puzzle</option>
+        </select>
+    </div>
+
+    <div class="condition-fields">
+        <div class="form-group">
+            <label for="question">Question</label>
+            <input type="text" name="question" value="{{.Question}}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="correct-answer">Correct Answer</label>
+            <input type="text" name="correct_answer" value="{{.CorrectAnswer}}" required>
+        </div>
+
+        {{if eq .Type "quiz"}}
+        <div class="form-group options-group">
+            <label>Options</label>
+            <div class="options-list">
+                {{range .Options}}
+                <div class="option-item">
+                    <input type="text" name="options[]" value="{{.}}" required>
+                    <button type="button" class="btn-remove"
+                            _="on click remove closest .option-item">×</button>
+                </div>
+                {{end}}
+            </div>
+            <button type="button" class="btn btn-small"
+                    hx-get="/condition/new-option"
+                    hx-target="previous .options-list"
+                    hx-swap="beforeend">Add Option</button>
+        </div>
+        {{end}}
+
+        {{if eq .Type "puzzle"}}
+        <div class="form-group">
+            <label for="media-link">Media Link</label>
+            <input type="url" name="media_link" value="{{.MediaLink}}" required
+                   hx-post="/media/validate-url"
+                   hx-trigger="change">
+        </div>
+        {{end}}
+
+        <div class="form-group">
+            <label for="hints">Hints</label>
+            <div class="hints-list">
+                {{range .Hints}}
+                <div class="hint-item">
+                    <input type="text" name="hints[]" value="{{.}}" required>
+                    <button type="button" class="btn-remove"
+                            _="on click remove closest .hint-item">×</button>
+                </div>
+                {{end}}
+            </div>
+            <button type="button" class="btn btn-small"
+                    hx-get="/condition/new-hint"
+                    hx-target="previous .hints-list"
+                    hx-swap="beforeend">Add Hint</button>
+        </div>
+
+        <div class="form-group">
+            <label class="checkbox-label">
+                <input type="checkbox" name="strict" {{if .Strict}}checked{{end}}>
+                Strict Mode
+            </label>
+        </div>
+    </div>
+</div>
+{{end}}

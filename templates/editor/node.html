@@ -1,0 +1,91 @@
+{{define "node-editor"}}
+<div class="node-editor">
+    <form hx-put="/nodes/{{.Node.ID}}"
+          hx-trigger="change delay:500ms"
+          hx-target="#toast">
+        <div class="form-section">
+            <h3>Basic Information</h3>
+            <div class="form-group">
+                <label for="node-id">Node ID</label>
+                <input type="number" id="node-id" name="id"
+                       value="{{.Node.ID}}" required min="1">
+            </div>
+            <div class="form-group">
+                <label for="short-desc">Short Description</label>
+                <input type="text" id="short-desc" name="short_description"
+                       value="{{.Node.ShortDesc}}" required>
+            </div>
+            <div class="form-group">
+                <label for="narrative">Narrative</label>
+                <textarea id="narrative" name="narrative"
+                         required>{{.Node.Narrative}}</textarea>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Location</h3>
+            <div class="location-inputs">
+                <div class="form-group">
+                    <label for="latitude">Latitude</label>
+                    <input type="number" id="latitude" name="location.lat"
+                           value="{{.Node.Location.Lat}}" required
+                           step="0.000001" min="-90" max="90">
+                </div>
+                <div class="form-group">
+                    <label for="longitude">Longitude</label>
+                    <input type="number" id="longitude" name="location.lon"
+                           value="{{.Node.Location.Lon}}" required
+                           step="0.000001" min="-180" max="180">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <h3>Media Files</h3>
+            <div id="media-files">
+                {{range .Node.MediaFiles}}
+                <div class="media-file"
+                     hx-target="closest div"
+                     hx-confirm="Are you sure you want to remove this media file?">
+                    <div class="media-type">{{.Type}}</div>
+                    <input type="url" name="media_files[].uri" value="{{.URI}}" required
+                           hx-post="/media/validate-url"
+                           hx-trigger="change">
+                    <input type="number" name="media_files[].send_delay"
+                           value="{{.SendDelay}}" required min="0">
+                    <button class="btn-remove"
+                            hx-delete="/nodes/{{$.Node.ID}}/media/{{.URI}}"
+                            _="on click remove closest .media-file">×</button>
+                </div>
+                {{end}}
+            </div>
+            <button hx-get="/nodes/{{.Node.ID}}/media/new"
+                    hx-target="#media-files"
+                    hx-swap="beforeend"
+                    type="button"
+                    class="btn">Add Media File</button>
+        </div>
+
+        <div class="form-section conditions">
+            <h3>Conditions</h3>
+            <div class="condition-group">
+                <h4>Entry Condition</h4>
+                {{template "condition-editor" .Node.EntryCondition}}
+            </div>
+            <div class="condition-group">
+                <h4>Exit Condition</h4>
+                {{template "condition-editor" .Node.ExitCondition}}
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button"
+                    class="btn btn-secondary"
+                    hx-delete="/nodes/{{.Node.ID}}"
+                    hx-confirm="Are you sure you want to delete this node?"
+                    hx-target="closest .node-editor">Delete Node</button>
+            <button type="submit" class="btn btn-primary">Save Node</button>
+        </div>
+    </form>
+</div>
+{{end}}

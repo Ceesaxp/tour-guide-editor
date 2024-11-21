@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tour Editor - {{.Title}}</title>
+    <script src="https://unpkg.com/htmx.org@1.9.11"></script>
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+    <script src="https://unpkg.com/yaml"></script>
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-yaml.min.js"></script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-content">
+            <span class="nav-title">Tour Editor</span>
+            <div class="nav-actions">
+                <button hx-get="/tour/preview"
+                        hx-target="#yaml-preview"
+                        class="btn">Preview YAML</button>
+                <button hx-post="/tour/export"
+                        class="btn btn-primary">Export Tour</button>
+            </div>
+        </div>
+    </nav>
+    <main class="content">
+        {{template "content" .}}
+    </main>
+    <div id="toast" class="toast" _="on htmx:afterSettle wait 3s then add .hidden"></div>
+</body>
+</html>
