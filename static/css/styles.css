@@ -222,6 +222,7 @@ label {
 }
 
 input[type="text"],
+input[type="password"],
 input[type="number"],
 input[type="url"],
 input[type="date"],
@@ -484,7 +485,6 @@ textarea {
         box-shadow: none;
     }
 }
-
 
 .login-page {
     display: flex;

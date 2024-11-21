@@ -4,8 +4,8 @@ server:
   host: "localhost"
 
 auth:
-  secret_key: "your-secret-key-here"
-  token_ttl: 60  # minutes
+  secret_key: "token_759287592ff5da580ef9ed2aa1c7d096"
+  token_ttl: 3600
 
 s3:
   media_bucket: "tour-editor-media"

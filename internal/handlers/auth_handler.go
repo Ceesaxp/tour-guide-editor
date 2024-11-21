@@ -4,6 +4,7 @@ package handlers
 import (
 	"encoding/json"
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 
@@ -88,6 +89,10 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set cookie with explicit expiration
+	expires := time.Now().Add(time.Duration(h.tokenTTL) * time.Minute)
+	log.Printf("The token will expire: %v", expires.Format(time.RFC3339))
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "auth_token",
 		Value:    token,
@@ -95,8 +100,12 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   r.TLS != nil,
 		SameSite: http.SameSiteStrictMode,
+		Expires:  expires,
 	})
 
-	// Redirect to editor
-	w.Header().Set("HX-Redirect", "/")
+	// Return JSON response for HTMX
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"redirect": "/",
+	})
 }

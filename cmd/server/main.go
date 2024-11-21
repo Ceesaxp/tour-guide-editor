@@ -30,6 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
+	log.Printf("TTL is %d", cfg.Auth.TokenTTL)
 
 	// Initialize services
 	tourService := services.NewTourService()
@@ -50,11 +51,14 @@ func main() {
 	}, mockS3)
 
 	// Initialize auth handler
-	authTemplates, err := template.ParseGlob(filepath.Join("templates", "login.html"))
+	authTemplates, err := template.ParseGlob(filepath.Join("templates", "*.html"))
 	if err != nil {
 		log.Printf("ERR: error parsing templates: %v", err)
 	}
-	authService := services.NewAuthService(cfg.Auth.SecretKey, time.Duration(cfg.Auth.TokenTTL))
+	authService := services.NewAuthService(
+		cfg.Auth.SecretKey,
+		time.Duration(cfg.Auth.TokenTTL)*time.Minute,
+	)
 	authHandler := handlers.NewAuthHandler(cfg.Auth, authTemplates, authService)
 
 	// Initialize editor handler
@@ -70,7 +74,7 @@ func main() {
 	handler := middleware.Chain(
 		router,
 		middleware.Logger,
-		middleware.RequireAuth(cfg.Auth.SecretKey),
+		//middleware.RequireAuth(cfg.Auth.SecretKey),
 		middleware.SessionID, // Add this middleware to generate session IDs
 	)
 
@@ -115,55 +119,6 @@ func main() {
 	}
 }
 
-// func main() {
-// 	configPath := flag.String("config", "config/config.yaml", "path to config file")
-// 	flag.Parse()
-
-// 	cfg, err := config.Load(*configPath)
-// 	if err != nil {
-// 		log.Fatalf("Failed to load config: %v", err)
-// 	}
-
-// 	server := setupServer(cfg)
-// 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-// 	log.Printf("Starting server on %s", addr)
-// 	log.Fatal(http.ListenAndServe(addr, server))
-// }
-
-// func setupServer(cfg *config.Config) http.Handler {
-// 	mux := http.NewServeMux()
-
-// 	// Authentication endpoints
-// 	auth := handlers.NewAuthHandler(cfg.Auth)
-// 	mux.HandleFunc("/auth/login", auth.Login)
-// 	mux.HandleFunc("/auth/logout", auth.Logout)
-
-// 	// Protected routes
-// 	//protected := middleware.RequireAuth(cfg.Auth.SecretKey)
-// 	//mux.Handle("/editor/", protected(handlers.NewEditorHandler()))
-// 	//mux.Handle("/editor/", handlers.NewEditorHandler(cfg.Editor))
-
-// 	return middleware.Logger(mux)
-// }
-
-// func setupRoutes(e *handlers.EditorHandler) http.Handler {
-// 	mux := http.NewServeMux()
-
-// 	// Static files
-// 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-
-// 	// Editor routes
-// 	mux.HandleFunc("/", e.ServeHTTP)
-// 	mux.HandleFunc("/tour/metadata", e.HandleTourMetadata)
-// 	mux.HandleFunc("/nodes", e.HandleNodesList)
-// 	mux.HandleFunc("/nodes/{id}/edit", e.HandleNodeEditor)
-// 	mux.HandleFunc("/nodes/{id}", e.HandleNodeSave)
-// 	mux.HandleFunc("/media/upload", e.HandleMediaUpload)
-// 	mux.HandleFunc("/media/validate-url", e.HandleMediaValidation)
-
-// 	return mux
-//}
-
 // Update cmd/server/main.go setupRoutes
 func setupRoutes(e *handlers.EditorHandler, a *handlers.AuthHandler, cfg config.Auth) http.Handler {
 	mux := http.NewServeMux()
@@ -171,16 +126,20 @@ func setupRoutes(e *handlers.EditorHandler, a *handlers.AuthHandler, cfg config.
 	// Auth routes (unprotected)
 	mux.HandleFunc("/login", a.ServeLogin)
 	mux.HandleFunc("/auth/login", a.HandleLogin)
-
-	// Protected routes
-	protected := middleware.RequireAuth(cfg.SecretKey)
+	mux.HandleFunc("/logout", a.Logout)
 
 	// Static files
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
+	// Protected routes
+	protected := middleware.RequireAuth(cfg.SecretKey)
+
 	// Editor routes
 	mux.Handle("/", protected(http.HandlerFunc(e.ServeHTTP)))
 	mux.Handle("/tour/metadata", protected(http.HandlerFunc(e.HandleTourMetadata)))
+	//mux.Handle("/tour/preview", protected(http.HandlerFunc(e.HandleTourPreview)))
+	//mux.Handle("/tour/export", protected(http.HandlerFunc(e.HandleTourExport)))
+	//mux.Handle("/nodes/new", protected(http.HandlerFunc(e.HandleNewNode)))
 	mux.Handle("/nodes", protected(http.HandlerFunc(e.HandleNodesList)))
 	mux.Handle("/nodes/{id}/edit", protected(http.HandlerFunc(e.HandleNodeEditor)))
 	mux.Handle("/nodes/{id}", protected(http.HandlerFunc(e.HandleNodeSave)))

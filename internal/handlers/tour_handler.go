@@ -4,6 +4,7 @@ package handlers
 import (
 	"encoding/json"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -131,7 +132,10 @@ func (h *EditorHandler) HandleNodesList(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.templates.ExecuteTemplate(w, "nodes-list", tour.Nodes)
+	if err := h.templates.ExecuteTemplate(w, "nodes-list", tour.Nodes); err != nil {
+		log.Printf("Error executing template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 func (h *EditorHandler) HandleNodeEditor(w http.ResponseWriter, r *http.Request) {

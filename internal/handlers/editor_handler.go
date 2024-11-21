@@ -27,7 +27,12 @@ type TemplateData struct {
 }
 
 func NewEditorHandler(templateDir string, tourService *services.TourService, mediaService *services.MediaService) *EditorHandler {
-	templates, err := template.ParseGlob(filepath.Join(templateDir, "*.html"))
+	templates, err := template.ParseFiles(
+		filepath.Join(templateDir, "layout.html"),
+		filepath.Join(templateDir, "editor", "condition.html"),
+		filepath.Join(templateDir, "editor", "index.html"),
+		filepath.Join(templateDir, "editor", "node.html"),
+	)
 	if err != nil {
 		log.Printf("ERR: error parsing templates: %v", err)
 		return nil
@@ -47,12 +52,22 @@ func (h *EditorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		tour = models.NewTour()
 	}
 
+	// Save tour to session
+	if err := h.tourService.SaveTourToSession(r.Context(), tour); err != nil {
+		log.Printf("ERR: error saving tour to session: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
 	data := TemplateData{
 		Title: "Tour Editor",
 		Tour:  tour,
 	}
 
-	h.templates.ExecuteTemplate(w, "layout.html", data)
+	if err := h.templates.ExecuteTemplate(w, "layout.html", data); err != nil {
+		log.Printf("ERR: error executing template: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
 }
 
 // Helper functions for node updates
