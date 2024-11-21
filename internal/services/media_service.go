@@ -19,6 +19,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/h2non/bimg"
+
+	"github.com/ceesaxp/tour-guide-editor/internal/mocks"
 )
 
 type MediaConfig struct {
@@ -31,10 +33,10 @@ type MediaConfig struct {
 
 type MediaService struct {
 	config   MediaConfig
-	s3Client *s3.Client
+	s3Client mocks.S3Client
 }
 
-func NewMediaService(config MediaConfig, s3Client *s3.Client) *MediaService {
+func NewMediaService(config MediaConfig, s3Client mocks.S3Client) *MediaService {
 	return &MediaService{
 		config:   config,
 		s3Client: s3Client,
@@ -223,7 +225,7 @@ func (s *MediaService) uploadToS3(data []byte, key string, contentType string) (
 
 func (s *MediaService) checkFileExists(hash string) (bool, string, error) {
 	// TODO: Implement file existence check in S3 or database
-	return false, "", nil
+	return false, hash, nil // File does not exist
 }
 
 func (s *MediaService) ValidateURL(url string) error {

@@ -8,10 +8,10 @@ import (
 type EditorHandler struct{}
 
 func NewEditorHandler() *EditorHandler {
-    return &EditorHandler{}
+	return &EditorHandler{}
 }
 
 func (h *EditorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-    // TODO: Implement editor handling
-    w.Write([]byte("Editor placeholder"))
+	// TODO: Implement editor handling
+	w.Write([]byte("Editor placeholder"))
 }

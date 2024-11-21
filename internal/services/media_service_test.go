@@ -2,7 +2,11 @@
 package services
 
 import (
+	"bytes"
 	"context"
+	"image"
+	"image/color"
+	"image/jpeg"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/ceesaxp/tour-guide-editor/internal/mocks"
 	"github.com/ceesaxp/tour-guide-editor/internal/types"
 	"github.com/h2non/bimg"
 )
@@ -34,22 +39,21 @@ func (m *MockS3Client) PutObject(ctx context.Context, params *s3.PutObjectInput,
 }
 
 func TestMediaService_ProcessAndUpload(t *testing.T) {
-	// Create mock S3 client
-	mockS3 := &MockS3Client{
+	mockS3 := &mocks.MockS3Client{
 		PutObjectFunc: func(ctx context.Context, params *s3.PutObjectInput, optFns ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
 			return &s3.PutObjectOutput{}, nil
 		},
 	}
 
 	config := MediaConfig{
-		MaxFileSize:    1024 * 1024, // 1MB
+		MaxFileSize:    1024 * 1024,
 		AllowedFormats: []string{"image/", "audio/", "video/"},
 		ImageMaxWidth:  800,
 		ImageMaxHeight: 600,
 		S3Bucket:       "test-bucket",
 	}
 
-	service := NewMediaService(config, &mockS3)
+	service := NewMediaService(config, mockS3)
 
 	tests := []struct {
 		name     string
@@ -126,11 +130,18 @@ func TestMediaService_ValidateURL(t *testing.T) {
 		case "/valid.jpg":
 			w.Header().Set("Content-Type", "image/jpeg")
 			w.Header().Set("Content-Length", "1000")
+			// Write actual JPEG data
+			img := createTestImage(t)
+			w.Write(img)
 		case "/invalid.txt":
 			w.Header().Set("Content-Type", "text/plain")
+			w.Write([]byte("test content"))
 		case "/large.jpg":
 			w.Header().Set("Content-Type", "image/jpeg")
 			w.Header().Set("Content-Length", "2000000")
+			// Write large image data
+			img := createLargeTestImage(t, 2000, 2000)
+			w.Write(img)
 		default:
 			http.NotFound(w, r)
 		}
@@ -243,34 +254,46 @@ func TestMediaService_ProcessImage(t *testing.T) {
 
 // Helper functions for testing
 func createTestImage(t *testing.T) []byte {
-	// Create a small test JPEG image using bimg
-	img := bimg.NewImage(make([]byte, 100*100*3))
-	options := bimg.Options{
-		Width:  100,
-		Height: 100,
-		Type:   bimg.JPEG,
+	// Create a new 100x100 image
+	img := image.NewRGBA(image.Rect(0, 0, 100, 100))
+
+	// Fill it with a solid color
+	for y := 0; y < 100; y++ {
+		for x := 0; x < 100; x++ {
+			img.Set(x, y, color.RGBA{R: 255, G: 0, B: 0, A: 255})
+		}
 	}
 
-	processed, err := img.Process(options)
-	if err != nil {
-		t.Fatalf("Failed to create test image: %v", err)
+	// Encode to JPEG
+	buf := new(bytes.Buffer)
+	if err := jpeg.Encode(buf, img, nil); err != nil {
+		t.Fatalf("Failed to encode test image: %v", err)
 	}
 
-	return processed
+	return buf.Bytes()
 }
 
 func createLargeTestImage(t *testing.T, width, height int) []byte {
-	img := bimg.NewImage(make([]byte, width*height*3))
-	options := bimg.Options{
-		Width:  width,
-		Height: height,
-		Type:   bimg.JPEG,
+	// Create a new image with specified dimensions
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+
+	// Fill it with a pattern
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			img.Set(x, y, color.RGBA{
+				R: uint8((x * 255) / width),
+				G: uint8((y * 255) / height),
+				B: 100,
+				A: 255,
+			})
+		}
 	}
 
-	processed, err := img.Process(options)
-	if err != nil {
-		t.Fatalf("Failed to create large test image: %v", err)
+	// Encode to JPEG
+	buf := new(bytes.Buffer)
+	if err := jpeg.Encode(buf, img, nil); err != nil {
+		t.Fatalf("Failed to encode large test image: %v", err)
 	}
 
-	return processed
+	return buf.Bytes()
 }

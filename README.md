@@ -17,3 +17,7 @@ tour-guide-editor/
 │   └── js/
 ├── tests/
 └── config/
+
+## Requirements
+
+ - [libvips](https://github.com/libvips/libvips)
