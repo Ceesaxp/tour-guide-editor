@@ -1,0 +1,24 @@
+# config/config.yaml
+server:
+  port: 8080
+  host: "localhost"
+
+auth:
+  secret_key: "your-secret-key-here"
+  token_ttl: 60  # minutes
+
+s3:
+  media_bucket: "tour-editor-media"
+  tour_bucket: "tour-editor-tours"
+  region: "us-west-2"
+  endpoint: "http://localhost:4566"  # For LocalStack testing
+
+media:
+  max_file_size: 10485760  # 10MB
+  allowed_formats:
+    - "image/jpeg"
+    - "image/png"
+    - "audio/mpeg"
+    - "video/mp4"
+  image_max_width: 2048
+  image_max_height: 2048
