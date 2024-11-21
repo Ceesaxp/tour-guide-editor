@@ -7,16 +7,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/ceesaxp/tour-guide-editor/internal/config"
 )
 
 func TestAuthHandler_Login(t *testing.T) {
-	handler := NewAuthHandler(struct {
-		SecretKey string `yaml:"secret_key"`
-		TokenTTL  int    `yaml:"token_ttl"`
-	}{
+	handler := NewAuthHandler(config.Auth{
 		SecretKey: "test-secret",
 		TokenTTL:  60,
-	})
+	}, nil, nil)
 
 	tests := []struct {
 		name           string

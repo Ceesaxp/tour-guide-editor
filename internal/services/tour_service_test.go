@@ -9,7 +9,7 @@ import (
 )
 
 func TestTourService_ParseTour(t *testing.T) {
-	service, _ := NewTourService()
+	service := NewTourService()
 
 	tests := []struct {
 		name        string
@@ -91,7 +91,7 @@ edges: []
 }
 
 func TestTourService_ValidateNode(t *testing.T) {
-	service, _ := NewTourService()
+	service := NewTourService()
 
 	tests := []struct {
 		name    string

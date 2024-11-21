@@ -14,7 +14,7 @@ import (
 )
 
 func TestTourHandler_Upload(t *testing.T) {
-	tourService, _ := services.NewTourService()
+	tourService := services.NewTourService()
 	handler := NewTourHandler(tourService, nil)
 
 	tests := []struct {
@@ -84,7 +84,7 @@ invalid_yaml: [
 }
 
 func TestTourHandler_ValidateNode(t *testing.T) {
-	tourService, _ := services.NewTourService()
+	tourService := services.NewTourService()
 	handler := NewTourHandler(tourService, nil)
 
 	tests := []struct {

@@ -3,15 +3,20 @@ package handlers
 
 import (
 	"encoding/json"
+	"html/template"
 	"net/http"
 	"time"
 
+	"github.com/ceesaxp/tour-guide-editor/internal/config"
+	"github.com/ceesaxp/tour-guide-editor/internal/services"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthHandler struct {
-	secretKey string
-	tokenTTL  int
+	secretKey   string
+	tokenTTL    int
+	templates   *template.Template
+	authService *services.AuthService
 }
 
 type loginRequest struct {
@@ -23,13 +28,12 @@ type loginResponse struct {
 	Token string `json:"token"`
 }
 
-func NewAuthHandler(cfg struct {
-	SecretKey string `yaml:"secret_key"` // TODO: probably need to reference the actual config struct?
-	TokenTTL  int    `yaml:"token_ttl"`
-}) *AuthHandler {
+func NewAuthHandler(cfg config.Auth, templates *template.Template, authService *services.AuthService) *AuthHandler {
 	return &AuthHandler{
-		secretKey: cfg.SecretKey,
-		tokenTTL:  cfg.TokenTTL,
+		templates:   templates,
+		authService: authService,
+		secretKey:   cfg.SecretKey,
+		tokenTTL:    cfg.TokenTTL,
 	}
 }
 
@@ -68,4 +72,31 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Since we're using JWTs, logout is handled client-side
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AuthHandler) ServeLogin(w http.ResponseWriter, r *http.Request) {
+	h.templates.ExecuteTemplate(w, "login", nil)
+}
+
+func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	token, err := h.authService.Authenticate(username, password)
+	if err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   r.TLS != nil,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	// Redirect to editor
+	w.Header().Set("HX-Redirect", "/")
 }

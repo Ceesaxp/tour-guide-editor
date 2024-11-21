@@ -65,3 +65,18 @@ type Edge struct {
 	Instructions string      `yaml:"instructions" validate:"omitempty"`
 	Silent       bool        `yaml:"silent"`
 }
+
+func NewTour() *Tour {
+	return &Tour{
+		ID:        generateID(), // You can implement this helper function as needed
+		Version:   "1.0",
+		StartDate: time.Now(),
+		EndDate:   time.Now().AddDate(0, 3, 0), // Default 3 months duration
+		Nodes:     make([]Node, 0),
+		Edges:     make([]Edge, 0),
+	}
+}
+
+func generateID() string {
+	return "tour-" + time.Now().Format("20060102150405")
+}
